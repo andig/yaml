@@ -337,6 +337,10 @@ type UnmarshalError struct {
 	Column  int
 }
 
+func (e UnmarshalError) Error() string {
+	return fmt.Sprintf("line %d: %s", e.Line, e.Message)
+}
+
 // A TypeError is returned by Unmarshal when one or more fields in
 // the YAML document cannot be properly decoded into the requested
 // types. When this error is returned, the value is still
@@ -349,9 +353,17 @@ func (e *TypeError) Error() string {
 	var b strings.Builder
 	b.WriteString("yaml: unmarshal errors:")
 	for _, err := range e.Errors {
-		b.WriteString(fmt.Sprintf("\n  line %d: %s", err.Line, err.Message))
+		b.WriteString("\n  " + err.Error())
 	}
 	return b.String()
+}
+
+func (e *TypeError) Unwrap() []error {
+	errs := make([]error, 0, len(e.Errors))
+	for _, err := range e.Errors {
+		errs = append(errs, err)
+	}
+	return errs
 }
 
 type Kind uint32
